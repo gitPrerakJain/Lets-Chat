@@ -29,14 +29,9 @@ const ProfileModal = ({ user, children }) => {
           onClick={onOpen}
         />
       )}
-      <Modal
-        size={{ base: "xs", md: "lg" }}
-        isCentered
-        isOpen={isOpen}
-        onClose={onClose}
-      >
+      <Modal size="lg" isCentered isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent h={"lg"}>
+        <ModalContent h={"400px"}>
           <ModalHeader
             fontSize={"lg"}
             display={"flex"}
@@ -53,7 +48,7 @@ const ProfileModal = ({ user, children }) => {
           >
             <Image
               borderRadius={"full"}
-              boxSize="200px"
+              boxSize="150px"
               src={user.pic}
               alt={user.name}
             />
