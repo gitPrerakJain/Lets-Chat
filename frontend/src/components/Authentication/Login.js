@@ -78,6 +78,7 @@ const Login = () => {
         <Input
           placeholder="Enter Your E-mail"
           onChange={(e) => setEmail(e.target.value)}
+          value={email}
         />
       </FormControl>
       <FormControl id="password" isRequired>
@@ -87,6 +88,7 @@ const Login = () => {
             type={show ? "text" : "password"}
             placeholder="Enter Your Password"
             onChange={(e) => setPassword(e.target.value)}
+            value={password}
           />
           <InputRightElement width={"4.5rem"}>
             <Button onClick={handleClick} size="sm" h="1.75rem">
@@ -103,6 +105,18 @@ const Login = () => {
         isLoading={loading}
       >
         Log In
+      </Button>
+      <Button
+        colorScheme="red"
+        width="100%"
+        style={{ marginTop: 25 }}
+        onClick={() => {
+          setEmail("guestuser@example.com");
+          setPassword("guestUser");
+        }}
+        isLoading={loading}
+      >
+        Get Guest User Credentials
       </Button>
     </VStack>
   );

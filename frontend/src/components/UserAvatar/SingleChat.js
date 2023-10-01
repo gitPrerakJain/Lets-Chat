@@ -4,6 +4,7 @@ import {
   Box,
   FormControl,
   IconButton,
+  Image,
   Input,
   Spinner,
   Text,
@@ -27,6 +28,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState();
   const [socketConnected, setSocketConnected] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const toast = useToast();
 
   const fetchMessages = async () => {
@@ -64,6 +67,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   const sendMessage = async (event) => {
     if (event.key === "Enter" && newMessage) {
+      socket.emit("stop typing", selectedChat._id);
       try {
         const config = {
           headers: {
@@ -79,7 +83,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           config
         );
 
-        console.log(data);
+        // console.log(data);
         socket.emit("new message", data);
         setMessages([...messages, data]);
       } catch (error) {
@@ -95,13 +99,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket = io(ENDPOINT);
     socket.emit("setup", user);
     socket.on("connected", () => setSocketConnected(true));
+    socket.on("typing", () => setIsTyping(true));
+    socket.on("stop typing", () => setIsTyping(false));
   }, []);
 
   useEffect(() => {
+    setNewMessage("");
+
     fetchMessages();
 
     selectedChatCompare = selectedChat;
-    // console.log("indei useef");
+    // console.log("inside useEffect");
   }, [selectedChat]);
 
   useEffect(() => {
@@ -110,13 +118,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         !selectedChatCompare || // if chat is not selected or doesn't match current chat
         selectedChatCompare._id !== newMessageRecieved.chat._id
       ) {
-        console.log("vahiyaat");
+        setFetchAgain(!fetchAgain);
       } else {
-        console.log("lag to raha b");
         setMessages([...messages, newMessageRecieved]);
       }
     });
   });
+
+  const typingHandler = (e) => {
+    setNewMessage(e.target.value);
+    if (!socketConnected) return;
+
+    if (!typing) {
+      setTyping(true);
+      socket.emit("typing", selectedChat._id);
+    }
+    let timeSinceTyping = new Date().getTime();
+    setTimeout(() => {
+      let currentTime = new Date().getTime();
+      let timeDiff = currentTime - timeSinceTyping;
+      if (timeDiff > 3000 && typing) {
+        socket.emit("stop typing", selectedChat._id);
+        setTyping(false);
+      }
+    }, 3000);
+  };
 
   return (
     <>
@@ -134,7 +160,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             <IconButton
               d={{ base: "flex", md: "none" }}
               icon={<ArrowBackIcon />}
-              onClick={() => setSelectedChat("")}
+              onClick={() => {
+                setSelectedChat("");
+              }}
             />
 
             {!selectedChat.isGroupChat ? (
@@ -189,12 +217,27 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             )}
 
             <FormControl onKeyDown={sendMessage} isRequired mt={5}>
+              {isTyping ? (
+                <div style={{ height: "50px", width: "50px" }}>
+                  <Image
+                    boxSize={35}
+                    src={
+                      new URL(
+                        `../../Assets/typingIndicator.gif`,
+                        import.meta.url
+                      ).href
+                    }
+                  />
+                </div>
+              ) : (
+                <></>
+              )}
               <Input
                 variant={"filled"}
                 bg={"#E0E0E0"}
                 placeholder="Enter message here..."
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={typingHandler}
               />
             </FormControl>
           </Box>

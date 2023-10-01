@@ -1,12 +1,13 @@
 const express = require("express");
 const dotenv = require("dotenv");
 // const cors = require("cors");
-const { chats } = require("./data/data");
+// const { chats } = require("./data/data");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
+// console.log(require("dotenv").config());
 
 dotenv.config();
 connectDB();
@@ -14,9 +15,6 @@ const app = express();
 
 app.use(express.json()); // to accept json data
 // app.use(cors);
-// app.get("/", (req, res) => {
-//   res.send("API running successfully...");
-// });
 
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
@@ -37,17 +35,26 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("connected to socket.io");
+  // console.log("connected to socket.io");
 
   socket.on("setup", (userData) => {
-    console.log(userData._id);
+    // console.log(userData._id);
     socket.join(userData._id);
     socket.emit("connected");
   });
 
   socket.on("join chat", (room) => {
+    // console.log("userJoined", room);
     socket.join(room);
-    console.log("userJoined", room);
+  });
+
+  socket.on("typing", (room) => {
+    // console.log("user typing in room: ", room);
+    socket.in(room).emit("typing");
+  });
+  socket.on("stop typing", (room) => {
+    // console.log("user stopped typing in room: ", room);
+    socket.in(room).emit("stop typing");
   });
 
   socket.on("new message", (newMessageReceived) => {
@@ -60,5 +67,10 @@ io.on("connection", (socket) => {
       socket.in(user._id).emit("message received", newMessageReceived);
       console.log("inside new mesage");
     });
+  });
+
+  socket.off("setup", () => {
+    console.log("Disconnected user from socket");
+    socket.leave(userData._id);
   });
 });

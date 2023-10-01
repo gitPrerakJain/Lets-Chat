@@ -13,13 +13,10 @@ import {
   useDisclosure,
   Drawer,
   DrawerBody,
-  DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
   DrawerContent,
-  DrawerCloseButton,
   Input,
-  Toast,
   useToast,
   Spinner,
 } from "@chakra-ui/react";
@@ -37,7 +34,7 @@ const SideDrawer = () => {
   const [loadingChat, setLoadingChat] = useState();
   const toast = useToast();
 
-  const { setSelectedChat, chats, setChats } = ChatState();
+  const { setSelectedChat, chats, setChats, user } = ChatState();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const history = useHistory();
 
@@ -46,15 +43,20 @@ const SideDrawer = () => {
     history.push("/");
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (searchText) => {
     if (!search) {
-      toast({
-        title: "Enter name or email to search",
-        position: "bottom-left",
-        duration: 3000,
-        isClosable: true,
-        status: "warning",
-      });
+      // toast({
+      //   title: "Enter name or email to search",
+      //   position: "bottom-left",
+      //   duration: 3000,
+      //   isClosable: true,
+      //   status: "warning",
+      // });
+      // setSearchResults([]);
+      return;
+    }
+    if (!searchText) {
+      setSearchResults([]);
       return;
     }
 
@@ -66,12 +68,12 @@ const SideDrawer = () => {
         },
       };
       const { data } = await axios.get(`/api/user?search=${search}`, config);
-      console.log("data ", data);
+      // console.log("data ", data);
       setLoading(false);
       // setTimeout(() => {
       // }, 2000);
       setSearchResults(data);
-      console.log("searchRs ", searchResults);
+      // console.log("searchRs ", searchResults);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -96,7 +98,7 @@ const SideDrawer = () => {
 
       const { data } = await axios.post("/api/chat", { userId }, config);
 
-      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]); // !!!!!!!!!
+      if (!chats.find((c) => c._id === data._id)) setChats([data, ...chats]);
 
       setSelectedChat(data);
       setLoadingChat(false);
@@ -113,7 +115,7 @@ const SideDrawer = () => {
     }
   };
 
-  const { user } = ChatState();
+  // const {} = ChatState();
   // console.log(user.name);
 
   return (
@@ -179,10 +181,10 @@ const SideDrawer = () => {
         <DrawerOverlay />
         <DrawerContent>
           <DrawerHeader
-            borderBottomRadius={"3xl"}
-            borderBottomWidth={"2px"}
             borderTopRadius={"3xl"}
+            borderBottomRadius={"3xl"}
             borderTopWidth={"2px"}
+            borderBottomWidth={"2px"}
           >
             Search Users
           </DrawerHeader>
@@ -192,7 +194,10 @@ const SideDrawer = () => {
                 placeholder="Search by name or email"
                 mr={"2"}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  handleSearch(e.target.value);
+                }}
               />
               <Button onClick={handleSearch}>Go</Button>
             </Box>
